@@ -1,0 +1,616 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>JobPortal | Interactive Job Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fc;
+            padding: 2rem 1.5rem;
+            color: #1a2c3e;
+        }
+
+        /* main container */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #0b3b5f, #1b7b9e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #2c5a6e;
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+
+        /* filters row: search + dropdowns */
+        .filters-panel {
+            background: white;
+            border-radius: 28px;
+            padding: 1.2rem 1.8rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-group {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .search-group input {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid #cbdde6;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            background: #fff;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        .search-group input:focus {
+            border-color: #1b7b9e;
+            box-shadow: 0 0 0 3px rgba(27,123,158,0.2);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select {
+            padding: 0.75rem 1.5rem;
+            border-radius: 40px;
+            border: 1px solid #cbdde6;
+            background: white;
+            font-weight: 500;
+            color: #1e3b4a;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .filter-group select:focus {
+            border-color: #1b7b9e;
+        }
+
+        .reset-btn {
+            background: #eef2f5;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #2c5a6e;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #d9e2e8;
+            transform: scale(0.97);
+        }
+
+        /* two column layout: main jobs + saved section */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 2rem;
+        }
+
+        /* jobs grid */
+        .jobs-section h2, .saved-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            border-left: 5px solid #1b7b9e;
+            padding-left: 1rem;
+            color: #0f3b4f;
+        }
+
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* job card */
+        .job-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2edf2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .job-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -12px rgba(0,0,0,0.15);
+            border-color: #cbe4ed;
+        }
+
+        .company-logo {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(145deg, #d9eef5, #c2dfea);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.8rem;
+            color: #0e5f7a;
+            margin-bottom: 1rem;
+        }
+
+        .job-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .company-name {
+            font-weight: 600;
+            color: #1b7b9e;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .job-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 0.8rem 0;
+            font-size: 0.85rem;
+            color: #4c6e7e;
+        }
+
+        .job-details span {
+            background: #eef3f7;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .salary {
+            font-weight: 700;
+            color: #2b7a3e;
+        }
+
+        .bookmark-btn {
+            margin-top: 1rem;
+            background: transparent;
+            border: 1px solid #bdd8e3;
+            padding: 0.6rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #2c5a6e;
+        }
+
+        .bookmark-btn.saved {
+            background: #ffeed9;
+            border-color: #f3b33d;
+            color: #c46f0a;
+        }
+
+        .bookmark-btn:hover {
+            background: #e7f0f5;
+        }
+
+        /* saved jobs card (compact) */
+        .saved-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .saved-job-item {
+            background: white;
+            border-radius: 20px;
+            padding: 0.9rem;
+            border-left: 4px solid #f3b33d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: 0.1s;
+        }
+
+        .saved-job-item .saved-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .saved-job-item .saved-company {
+            font-size: 0.8rem;
+            color: #1b7b9e;
+        }
+
+        .saved-job-item .saved-meta {
+            font-size: 0.7rem;
+            color: #5f7f8f;
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .remove-saved {
+            background: none;
+            border: none;
+            color: #b91c1c;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .empty-saved {
+            text-align: center;
+            padding: 2rem;
+            background: #fef9e8;
+            border-radius: 24px;
+            color: #b27d40;
+            font-size: 0.9rem;
+        }
+
+        /* responsiveness */
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 1rem;
+            }
+        }
+
+        .badge-count {
+            background: #f3b33d;
+            color: #2d2b26;
+            border-radius: 40px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        footer {
+            margin-top: 2.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b8b9c;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>✨ JobPortal</h1>
+        <p>Find your dream role • Bookmark & save opportunities</p>
+    </div>
+
+    <div class="filters-panel">
+        <div class="search-group">
+            <input type="text" id="searchInput" placeholder="🔍 Search by job title, company, or location..." autocomplete="off">
+        </div>
+        <div class="filter-group">
+            <select id="companyFilter">
+                <option value="all">All Companies</option>
+            </select>
+            <select id="roleFilter">
+                <option value="all">All Roles / Types</option>
+            </select>
+            <button id="resetFiltersBtn" class="reset-btn">Reset Filters</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Left: Job Cards Grid -->
+        <div class="jobs-section">
+            <h2>📋 Available Jobs <span id="jobCountDisplay" class="badge-count">0</span></h2>
+            <div id="jobsGridContainer" class="jobs-grid">
+                <!-- dynamic job cards will render here -->
+            </div>
+        </div>
+
+        <!-- Right: Saved Jobs Section -->
+        <div class="saved-section">
+            <h2>📌 Saved Jobs <span id="savedCountBadge" class="badge-count">0</span></h2>
+            <div id="savedJobsList" class="saved-list">
+                <!-- saved jobs appear here -->
+            </div>
+        </div>
+    </div>
+    <footer>🔖 Click bookmark to save jobs • Filters & search update instantly</footer>
+</div>
+
+<script type="text/javascript">
+    // --------------------------------------------------------------
+    // JOB DATA (simulated job listings)
+    // --------------------------------------------------------------
+    const jobsData = [
+        { id: 1, title: "Frontend Developer", company: "TechNova", salary: "$75k - $95k", location: "Remote, USA", roleType: "Full-time", logoPlaceholder: "TN" },
+        { id: 2, title: "Backend Engineer", company: "DataStream", salary: "$85k - $110k", location: "Austin, TX", roleType: "Full-time", logoPlaceholder: "DS" },
+        { id: 3, title: "UI/UX Designer", company: "CreativeMinds", salary: "$65k - $82k", location: "San Francisco, CA", roleType: "Contract", logoPlaceholder: "CM" },
+        { id: 4, title: "DevOps Specialist", company: "CloudScale", salary: "$95k - $125k", location: "Remote", roleType: "Full-time", logoPlaceholder: "CS" },
+        { id: 5, title: "Data Analyst", company: "InsightHub", salary: "$70k - $88k", location: "Chicago, IL", roleType: "Full-time", logoPlaceholder: "IH" },
+        { id: 6, title: "React Native Developer", company: "AppForge", salary: "$80k - $100k", location: "New York, NY", roleType: "Full-time", logoPlaceholder: "AF" },
+        { id: 7, title: "Product Manager", company: "TechNova", salary: "$105k - $130k", location: "Seattle, WA", roleType: "Full-time", logoPlaceholder: "TN" },
+        { id: 8, title: "QA Engineer", company: "QualityFirst", salary: "$60k - $78k", location: "Denver, CO", roleType: "Part-time", logoPlaceholder: "QF" },
+        { id: 9, title: "Machine Learning Engineer", company: "AI Futures", salary: "$110k - $145k", location: "Remote", roleType: "Full-time", logoPlaceholder: "AF" },
+        { id: 10, title: "Technical Writer", company: "CreativeMinds", salary: "$58k - $72k", location: "Portland, OR", roleType: "Contract", logoPlaceholder: "CM" },
+        { id: 11, title: "Frontend Developer (Angular)", company: "WebStack", salary: "$78k - $96k", location: "Boston, MA", roleType: "Full-time", logoPlaceholder: "WS" },
+        { id: 12, title: "IT Support Specialist", company: "CloudScale", salary: "$52k - $65k", location: "Dallas, TX", roleType: "Part-time", logoPlaceholder: "CS" }
+    ];
+
+    // ---------- TypeScript-like strong types (using JSDoc but pure JS with intent) ----------
+    /** @typedef {{ id: number, title: string, company: string, salary: string, location: string, roleType: string, logoPlaceholder: string }} Job */
+
+    /** @type {Job[]} */
+    let allJobs = [...jobsData];
+    /** @type {Set<number>} */ 
+    let savedJobIds = new Set();   // store bookmarked job IDs
+
+    // DOM elements
+    const jobsContainer = document.getElementById('jobsGridContainer');
+    const savedContainer = document.getElementById('savedJobsList');
+    const searchInput = document.getElementById('searchInput');
+    const companyFilterSelect = document.getElementById('companyFilter');
+    const roleFilterSelect = document.getElementById('roleFilter');
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    const jobCountSpan = document.getElementById('jobCountDisplay');
+    const savedCountSpan = document.getElementById('savedCountBadge');
+
+    // --- Helper: load saved IDs from localStorage ---
+    function loadSavedFromStorage() {
+        const stored = localStorage.getItem('jobportal_saved');
+        if(stored) {
+            try {
+                const arr = JSON.parse(stored);
+                if(Array.isArray(arr)) savedJobIds = new Set(arr);
+                else savedJobIds = new Set();
+            } catch(e) { savedJobIds = new Set(); }
+        } else {
+            // default demo saved: job id 1 and 5 for showcase
+            savedJobIds = new Set([1,5]);
+        }
+        updateSavedBadge();
+        renderSavedJobsSection();
+    }
+
+    function persistSaved() {
+        const arr = Array.from(savedJobIds);
+        localStorage.setItem('jobportal_saved', JSON.stringify(arr));
+        updateSavedBadge();
+        renderSavedJobsSection();
+        // re-render job cards because bookmark buttons state changed
+        renderJobCards();
+    }
+
+    function updateSavedBadge() {
+        savedCountSpan.innerText = savedJobIds.size;
+    }
+
+    // toggle saved job
+    function toggleSaveJob(jobId) {
+        if(savedJobIds.has(jobId)) {
+            savedJobIds.delete(jobId);
+        } else {
+            savedJobIds.add(jobId);
+        }
+        persistSaved();
+    }
+
+    // check if job is saved
+    function isJobSaved(jobId) {
+        return savedJobIds.has(jobId);
+    }
+
+    // ---- populate filter dropdowns dynamically ----
+    function populateFilters() {
+        // get unique companies
+        const companies = [...new Set(allJobs.map(job => job.company))].sort();
+        companyFilterSelect.innerHTML = '<option value="all">All Companies</option>';
+        companies.forEach(comp => {
+            const option = document.createElement('option');
+            option.value = comp;
+            option.textContent = comp;
+            companyFilterSelect.appendChild(option);
+        });
+
+        // unique role types
+        const roles = [...new Set(allJobs.map(job => job.roleType))].sort();
+        roleFilterSelect.innerHTML = '<option value="all">All Roles / Types</option>';
+        roles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role;
+            option.textContent = role;
+            roleFilterSelect.appendChild(option);
+        });
+    }
+
+    // get current filter state
+    function getCurrentFilters() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const selectedCompany = companyFilterSelect.value;
+        const selectedRole = roleFilterSelect.value;
+        return { searchTerm, selectedCompany, selectedRole };
+    }
+
+    // filter jobs based on search + company + role
+    function filterJobs() {
+        const { searchTerm, selectedCompany, selectedRole } = getCurrentFilters();
+        let filtered = [...allJobs];
+
+        if(searchTerm !== "") {
+            filtered = filtered.filter(job => 
+                job.title.toLowerCase().includes(searchTerm) ||
+                job.company.toLowerCase().includes(searchTerm) ||
+                job.location.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        if(selectedCompany !== "all") {
+            filtered = filtered.filter(job => job.company === selectedCompany);
+        }
+
+        if(selectedRole !== "all") {
+            filtered = filtered.filter(job => job.roleType === selectedRole);
+        }
+
+        return filtered;
+    }
+
+    // render job cards in grid
+    function renderJobCards() {
+        const filtered = filterJobs();
+        jobCountSpan.innerText = filtered.length;
+
+        if(filtered.length === 0) {
+            jobsContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; background:#fff9ef; border-radius:32px;">✨ No jobs match your filters. Try resetting ✨</div>`;
+            return;
+        }
+
+        jobsContainer.innerHTML = filtered.map(job => {
+            const saved = isJobSaved(job.id);
+            return `
+                <div class="job-card" data-job-id="${job.id}">
+                    <div class="company-logo">${job.logoPlaceholder.substring(0,2).toUpperCase()}</div>
+                    <div class="job-title">${escapeHtml(job.title)}</div>
+                    <div class="company-name">🏢 ${escapeHtml(job.company)}</div>
+                    <div class="job-details">
+                        <span>📍 ${escapeHtml(job.location)}</span>
+                        <span class="salary">💰 ${escapeHtml(job.salary)}</span>
+                        <span>⚡ ${escapeHtml(job.roleType)}</span>
+                    </div>
+                    <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${job.id}">
+                        ${saved ? '★ Saved' : '☆ Bookmark'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        // attach event listeners to all bookmark buttons after render
+        document.querySelectorAll('.bookmark-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const jobId = parseInt(btn.getAttribute('data-id'));
+                if(!isNaN(jobId)) {
+                    toggleSaveJob(jobId);
+                    // after toggling, re-render both sections to reflect updated bookmark style
+                    renderJobCards();   // to update button state immediately
+                    renderSavedJobsSection();
+                }
+            });
+        });
+    }
+
+    // render saved jobs area
+    function renderSavedJobsSection() {
+        const savedJobsArray = allJobs.filter(job => savedJobIds.has(job.id));
+        if(savedJobsArray.length === 0) {
+            savedContainer.innerHTML = `<div class="empty-saved">📭 No saved jobs yet. Click bookmark on any job card!</div>`;
+            return;
+        }
+
+        savedContainer.innerHTML = savedJobsArray.map(job => `
+            <div class="saved-job-item" data-saved-id="${job.id}">
+                <div class="saved-title">${escapeHtml(job.title)}</div>
+                <div class="saved-company">${escapeHtml(job.company)}</div>
+                <div class="saved-meta">
+                    <span>💰 ${escapeHtml(job.salary)}</span>
+                    <span>📍 ${escapeHtml(job.location)}</span>
+                    <button class="remove-saved" data-remove-id="${job.id}">Remove</button>
+                </div>
+            </div>
+        `).join('');
+
+        // attach remove event handlers
+        document.querySelectorAll('.remove-saved').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const removeId = parseInt(btn.getAttribute('data-remove-id'));
+                if(savedJobIds.has(removeId)) {
+                    savedJobIds.delete(removeId);
+                    persistSaved();
+                    renderJobCards();          // update job cards bookmark style
+                    renderSavedJobsSection();   // refresh saved list
+                }
+            });
+        });
+    }
+
+    // simple XSS protection
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // reset filters to default
+    function resetAllFilters() {
+        searchInput.value = '';
+        companyFilterSelect.value = 'all';
+        roleFilterSelect.value = 'all';
+        renderJobCards();
+    }
+
+    // event listeners for live filtering
+    function bindEvents() {
+        searchInput.addEventListener('input', () => renderJobCards());
+        companyFilterSelect.addEventListener('change', () => renderJobCards());
+        roleFilterSelect.addEventListener('change', () => renderJobCards());
+        resetBtn.addEventListener('click', resetAllFilters);
+    }
+
+    // initialization (Micro Project - complete interactive portal)
+    function init() {
+        populateFilters();
+        loadSavedFromStorage();    // loads saved set, calls renderSaved & updates badge, also render jobs inside?
+        // after storage loaded, ensure jobs grid render
+        renderJobCards();
+        bindEvents();
+    }
+
+    init();
+</script>
+</body>
+</html>
