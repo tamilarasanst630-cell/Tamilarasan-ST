@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Job Portal</h1>
+
+<!-- Filters -->
+<input type="text" id="search" placeholder="Search jobs...">
+
+<select id="companyFilter"></select>
+
+<select id="roleFilter">
+  <option value="">All Roles</option>
+  <option value="Developer">Developer</option>
+  <option value="Designer">Designer</option>
+</select>
+
+<!-- Job List -->
+<h2>Available Jobs</h2>
+<div id="jobList" class="grid"></div>
+
+<!-- Saved Jobs -->
+<h2>Saved Jobs</h2>
+<div id="savedJobs" class="grid"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
+body {
+  font-family: Arial;
+  margin: 20px;
+  background: #f4f4f4;
+}
+
+h1 {
+  text-align: center;
+}
+
+input, select {
+  padding: 8px;
+  margin: 10px 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  transition: 0.3s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+button {
+  padding: 5px 10px;
+  background: blue;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: darkblue;
+}
+type Job = {
+  id: number;
+  title: string;
+  company: string;
+  salary: string;
+  location: string;
+  role: string;
+};
+
+let jobs: Job[] = [
+  { id: 1, title: "Frontend Developer", company: "TCS", salary: "5 LPA", location: "Chennai", role: "Developer" },
+  { id: 2, title: "UI Designer", company: "Infosys", salary: "4 LPA", location: "Bangalore", role: "Designer" },
+  { id: 3, title: "Backend Developer", company: "Wipro", salary: "6 LPA", location: "Hyderabad", role: "Developer" }
+];
+
+let savedJobs: Job[] = [];
+
+const jobList = document.getElementById("jobList") as HTMLDivElement;
+const savedList = document.getElementById("savedJobs") as HTMLDivElement;
+const searchInput = document.getElementById("search") as HTMLInputElement;
+const companyFilter = document.getElementById("companyFilter") as HTMLSelectElement;
+const roleFilter = document.getElementById("roleFilter") as HTMLSelectElement;
+
+// Populate Company Dropdown
+function loadCompanies() {
+  const companies = [...new Set(jobs.map(j => j.company))];
+  companyFilter.innerHTML = `<option value="">All Companies</option>`;
+  
+  companies.forEach(c => {
+    companyFilter.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+}
+
+// Display Jobs
+function displayJobs(data: Job[]) {
+  jobList.innerHTML = "";
+
+  data.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${job.title}</h3>
+      <p><b>${job.company}</b></p>
+      <p>${job.salary}</p>
+      <p>${job.location}</p>
+      <button onclick="saveJob(${job.id})">Save</button>
+    `;
+
+    jobList.appendChild(card);
+  });
+}
+
+// Save Job
+function saveJob(id: number) {
+  const job = jobs.find(j => j.id === id);
+  if (job && !savedJobs.includes(job)) {
+    savedJobs.push(job);
+    displaySavedJobs();
+  }
+}
+
+// Display Saved Jobs
+function displaySavedJobs() {
+  savedList.innerHTML = "";
+
+  savedJobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${job.title}</h3>
+      <p>${job.company}</p>
+    `;
+
+    savedList.appendChild(card);
+  });
+}
+function filterJobs() {
+  let filtered = jobs;
+
+  const search = searchInput.value.toLowerCase();
+  const company = companyFilter.value;
+  const role = roleFilter.value;
+
+  filtered = filtered.filter(job =>
+    job.title.toLowerCase().includes(search)
+  );
+
+  if (company) {
+    filtered = filtered.filter(job => job.company === company);
+  }
+
+  if (role) {
+    filtered = filtered.filter(job => job.role === role);
+  }
+
+  displayJobs(filtered);
+}
+searchInput.addEventListener("input", filterJobs);
+companyFilter.addEventListener("change", filterJobs);
+roleFilter.addEventListener("change", filterJobs);
+loadCompanies();
+displayJobs(jobs);
